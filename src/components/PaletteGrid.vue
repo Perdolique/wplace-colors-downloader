@@ -6,8 +6,10 @@
       class="palette-color-item"
       :class="{ used: usedSet && usedSet.has(color) }"
     >
-      <div class="color-box" :style="{ backgroundColor: color === 'transparent' ? 'transparent' : color }">
-        <div v-if="color === 'transparent'" class="transparent-pattern" />
+      <div class="box-wrap">
+        <div class="color-box" :style="{ backgroundColor: color === 'transparent' ? 'transparent' : color }">
+          <div v-if="color === 'transparent'" class="transparent-pattern" />
+        </div>
         <span v-if="usedSet && usedSet.has(color)" class="badge" aria-hidden="true">✓</span>
       </div>
       <div class="color-name">{{ names[i] }}</div>
@@ -34,6 +36,7 @@ defineProps<{
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 
@@ -45,6 +48,12 @@ defineProps<{
   box-shadow: 0 1px 2px rgba(16,24,40,0.04);
   position: relative;
   overflow: hidden;
+}
+
+.box-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
 }
 
 .transparent-pattern {
@@ -87,7 +96,6 @@ defineProps<{
   font-size: 12px;
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(16,24,40,0.12);
-  transform: translate(30%, -30%);
 }
 
 /* auto-fit ensures wrapping and prevents overflow on large screens */

@@ -1,0 +1,10 @@
+{
+  // project name used by Wrangler
+  "name": "wplace-colors-downloader",
+  // compatibility date for Workers runtime
+  "compatibility_date": "2025-09-29",
+  // tell Wrangler to upload the built Vite output directory as static assets
+  "assets": {
+    "directory": "./dist"
+  }
+}

@@ -48,6 +48,19 @@ defineProps<{
 .select-all:hover { background:#1e40af }
 .items { margin-top: 10px; display:flex; flex-direction:column; gap:8px }
 .color-item { display:flex; align-items:center; gap:10px; padding:6px; border-radius:8px }
+.color-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px;
+  border-radius:8px;
+  transition: background 180ms ease, box-shadow 180ms ease, transform 120ms ease, border-color 120ms ease;
+  cursor: pointer;
+  box-sizing: border-box;
+  /* reserve border space to avoid layout shift when toggling selected */
+  border: 1px solid transparent;
+}
+.color-item:hover { background: rgba(15,23,42,0.03); box-shadow: 0 4px 10px rgba(2,6,23,0.04); transform: translateY(-1px) }
 .color-item.selected { background: rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.18) }
 .color-box {
   width:36px;

@@ -47,7 +47,6 @@ defineProps<{
 .select-all { background: #2563eb; color: #fff; border: none; padding:6px 10px; border-radius:6px; cursor:pointer }
 .select-all:hover { background:#1e40af }
 .items { margin-top: 10px; display:flex; flex-direction:column; gap:8px }
-.color-item { display:flex; align-items:center; gap:10px; padding:6px; border-radius:8px }
 .color-item {
   display:flex;
   align-items:center;

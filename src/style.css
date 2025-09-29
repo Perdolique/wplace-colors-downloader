@@ -65,6 +65,27 @@ button:focus-visible {
   text-align: center;
 }
 
+/* Ensure pointer cursor on hover for all interactive / clickable elements */
+/* Make cursor pointer for interactive elements (apply to the element and key child elements)
+   This ensures the pointer shows even when hovering children inside clickable containers */
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+label[for],
+file-btn,
+.select-all,
+.download-link,
+.color-item {
+  cursor: pointer;
+}
+
+/* Ensure inner boxes inside clickable items also show pointer */
+.color-item .color-box {
+  cursor: pointer;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -76,4 +97,36 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Fallback: ensure pointer for actionable elements inside the app even if other
+   styles try to override. Avoid overriding disabled controls. Use sparingly. */
+.app :is(
+  button,
+  a,
+  [role="button"],
+  [role="link"],
+  input[type="button"],
+  input[type="submit"],
+  [tabindex]:not([tabindex="-1"]),
+  .file-btn,
+  .select-all,
+  .download-link,
+  .color-item,
+
+  .preview-header,
+  .preview-hit,
+  .preview-toggle,
+  .preview-download-big,
+  .preview-img
+):not([disabled]):not([aria-disabled="true"]) {
+  cursor: pointer !important;
+}
+
+/* Dev helper: toggle this class on <body> to force pointer cursor everywhere
+   (useful to determine whether CSS can affect the cursor in your environment).
+   Enable from console: document.body.classList.add('show-all-pointers')
+   Disable: document.body.classList.remove('show-all-pointers') */
+.show-all-pointers *:not([disabled]):not([aria-disabled="true"]) {
+  cursor: pointer !important;
 }

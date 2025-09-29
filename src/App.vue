@@ -40,41 +40,30 @@
       />
 
       <div class="actions">
-        <button @click="downloadSelectedColors" class="download-btn">Download Selected Colors</button>
-        <div :class="['preview', { collapsed: !previewOpen }]">
-          <div class="preview-header">
-            <h4>Filtered preview</h4>
-            <button class="preview-toggle" @click.stop="previewOpen = !previewOpen" :aria-pressed="previewOpen">
-              <span v-if="previewOpen">▾</span>
-              <span v-else>▸</span>
-            </button>
-          </div>
-          <!-- overlay hit-area when collapsed: covers the small square to make it easy to click/tap -->
-          <button
-            v-if="!previewOpen"
-            class="preview-hit"
-            @click="previewOpen = true"
-            aria-label="Open preview"
-          />
-          <div v-if="previewOpen">
-            <div v-if="previewDataUrl">
-              <img :src="previewDataUrl" alt="preview" class="preview-img" />
-            </div>
-            <div v-else class="preview-empty">No preview yet. Select colors or use group downloads.</div>
-          </div>
-        </div>
+        <PreviewPanel
+          :previewOpen="previewOpen"
+          :previewDataUrl="previewDataUrl"
+          :disabled="selectedColors.size === 0"
+          :imageLoaded="imageLoaded"
+          :placeholderFilename="placeholderFilename"
+          @toggle="togglePreview"
+          @open="previewOpen = true"
+          @download="downloadSelectedColors"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import FileUpload from './components/FileUpload.vue'
 import PaletteGrid from './components/PaletteGrid.vue'
 import ColorList from './components/ColorList.vue'
+import PreviewPanel from './components/PreviewPanel.vue'
 // import default example image from src/assets (moved from public)
 import exampleImage from './assets/coolstory-bob.png'
+
 
 const canvasRef = ref<HTMLCanvasElement>()
 const error = ref('')
@@ -235,6 +224,16 @@ const allColors = new Set([...freeColors, ...paidColors])
 const previewDataUrl = ref('')
 const previewOpen = ref(true)
 
+const placeholderFilename = computed(() => {
+  if (originalFileName.value) return originalFileName.value
+  try {
+    if (typeof exampleImage === 'string') return exampleImage.split('/').pop() || 'example image'
+  } catch {
+    // ignore
+  }
+  return 'example image'
+})
+
 // restore preview open/closed state from localStorage (safe in browsers)
 try {
   const stored = localStorage.getItem('previewOpen')
@@ -251,6 +250,10 @@ watch(previewOpen, (val) => {
     // ignore storage errors
   }
 })
+
+function togglePreview() {
+  previewOpen.value = !previewOpen.value
+}
 
 // ensure any UI animation starts after mount to avoid initial jump
 onMounted(() => {
@@ -275,6 +278,8 @@ const onFileChange = (event: Event) => {
   usedColorSet.value = new Set()
   freeUsed.value = []
   paidUsed.value = []
+  // reset any selected colors when a new file is chosen
+  selectedColors.value = new Set()
 
   const img = new Image()
   img.onload = () => {
@@ -309,6 +314,8 @@ const onFileChange = (event: Event) => {
     imageLoaded.value = true
     // reset preview when a new image is loaded
     previewDataUrl.value = ''
+    // reset any selected colors when a new file is loaded
+    selectedColors.value = new Set()
   }
   img.src = URL.createObjectURL(file)
 }
@@ -439,6 +446,7 @@ const toggleColor = (color: string) => {
 }
 
 const downloadSelectedColors = () => {
+  if (selectedColors.value.size === 0) return
   const canvas = canvasRef.value!
   const ctx = canvas.getContext('2d')!
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -467,7 +475,20 @@ const downloadSelectedColors = () => {
   const newCtx = newCanvas.getContext('2d')!
   newCtx.putImageData(newImageData, 0, 0)
   const link = document.createElement('a')
-  link.download = `${originalFileName.value}_selected_colors.png`
+  // choose a base filename: prefer originalFileName, then placeholderFilename, then a generic name
+  let baseName = originalFileName.value || ''
+  try {
+    // placeholderFilename is a computed ref; use its value if original not set
+    // (placeholderFilename may not be defined in some contexts, guard access)
+    // @ts-ignore
+    if (!baseName && typeof placeholderFilename !== 'undefined') baseName = placeholderFilename.value || ''
+  } catch {
+    // ignore
+  }
+  if (!baseName) baseName = 'selected_colors'
+  // strip extension if present
+  baseName = baseName.replace(/\.[^/.]+$/, '')
+  link.download = `${baseName}_selected_colors.png`
   link.href = newCanvas.toDataURL()
   previewDataUrl.value = newCanvas.toDataURL()
   link.click()
@@ -671,6 +692,10 @@ function generatePreview() {
 }
 
 .actions { display:flex; gap:20px; align-items:flex-start; margin-top:12px }
+.preview-download-wrap { margin-top: 10px; display:flex; width:100% }
+.preview-download-big { width:100%; padding:10px 12px; border-radius:8px; background: #2563eb; color:#fff; border:none; cursor:pointer; font-weight:600 }
+.preview-download-big:hover { background: #2563eb }
+.preview-download-big:disabled { background:#94a3b8; cursor:not-allowed }
 .preview {
   max-width: 480px;
   position: fixed;
@@ -685,6 +710,7 @@ function generatePreview() {
   /* animate size and opacity smoothly */
   transition: width 240ms ease, height 240ms ease, padding 200ms ease, opacity 200ms ease, transform 180ms ease;
   will-change: width, height, transform, opacity;
+  cursor: pointer;
 }
 .preview.collapsed {
   width: 72px;
@@ -697,19 +723,75 @@ function generatePreview() {
   justify-content: center;
   transform: scale(0.98);
   opacity: 0.98;
+  cursor: pointer;
+  border: 1px solid rgba(2,6,23,0.04);
 }
 .preview.collapsed .preview-header h4 { display: none }
-.preview.collapsed .preview-toggle { display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size: 18px; padding: 0; border-radius: 6px }
-.preview-hit { position: absolute; inset: 0; background: transparent; border: none; cursor: pointer }
+.preview.collapsed .preview-header { padding: 0; border-radius: 6px; width: 100%; height: 100%; align-items: center; justify-content: center }
+.preview.collapsed .preview-toggle { display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-size: 20px; padding: 0; border-radius: 6px }
+.preview-hit { position: absolute; inset: 0; background: transparent; border: none; cursor: pointer; border-radius: 8px; transition: background 180ms ease }
 .preview-hit:focus { outline: 2px solid rgba(59,130,246,0.6); border-radius: 6px }
-.preview-header { display:flex; align-items:center; justify-content:space-between; gap:8px }
 .preview-toggle { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px }
-.preview-toggle:hover { background: rgba(0,0,0,0.04) }
-.preview-img { width: 100%; height: auto; border: 1px solid #ddd; border-radius:8px }
+.preview-img { width: 100%; height: auto; border: 1px solid #ddd; border-radius:8px; cursor: pointer }
 .preview-empty { color: #666; font-size: 14px }
+
+/* make the whole header a clickable button */
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: transparent; /* let container background show through for consistency */
+  padding: 6px 10px;
+  height: 48px;
+  border-radius: 6px;
+  border: none; /* avoid double border with .preview container */
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+}
+.preview-header:focus {
+  outline: 3px solid rgba(59,130,246,0.14);
+  box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+}
+.preview-header:hover { background: rgba(2,6,23,0.02) }
+.preview-title { margin: 0; font-size: 14px; font-weight: 600 }
+.preview-header .preview-toggle { font-size: 18px; padding: 2px 6px }
 
 @media (max-width: 1000px) {
   /* on smaller screens, keep preview in flow */
   .preview { position: static; top: auto; right: auto; width: 100%; max-width: none }
+}
+
+/* ensure pointer cursor on interactive elements (buttons, controls, list items) */
+/* actionable elements: native and ARIA/tab-focusable controls */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+[role="button"],
+[role="link"],
+[tabindex]:not([tabindex="-1"]),
+.preview-header,
+.preview-hit,
+.preview-toggle,
+.preview-download-big,
+.download-link,
+.color-item,
+.color-item[role="button"],
+.color-item .color-box,
+.palette-color-item,
+.preview-img,
+.download-btn {
+  cursor: pointer;
+}
+
+/* disabled controls should show not-allowed (covers native disabled and aria-disabled) */
+button:disabled,
+input:disabled,
+.preview-download-big:disabled,
+.download-btn:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 </style>

@@ -37,7 +37,9 @@ defineProps<{
   flex-direction: column;
   align-items: center;
   position: relative;
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
+
 
 
 .color-box {

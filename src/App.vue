@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-  <h1 class="title">Image Upload & Palette Checker</h1>
+  <h1 class="title">Wplace Color Downloader</h1>
   <FileUpload @fileChange="onFileChange" />
     <canvas ref="canvasRef" class="canvas" v-show="imageLoaded && !error"></canvas>
     <div v-if="error" class="error">{{ error }}</div>
@@ -758,10 +758,7 @@ function generatePreview() {
 .preview-title { margin: 0; font-size: 14px; font-weight: 600 }
 .preview-header .preview-toggle { font-size: 18px; padding: 2px 6px }
 
-@media (max-width: 1000px) {
-  /* on smaller screens, keep preview in flow */
-  .preview { position: static; top: auto; right: auto; width: 100%; max-width: none }
-}
+/* mobile positioning for preview is handled by the component's own CSS (PreviewPanel.vue). */
 
 /* ensure pointer cursor on interactive elements (buttons, controls, list items) */
 /* actionable elements: native and ARIA/tab-focusable controls */

@@ -1,6 +1,6 @@
-# Wplace Image - Vue.js App
+# Wplace Color Downloader - Vue.js App
 
-This is a Vue.js web application for uploading images and checking if their colors are within a specific 64-color palette (32 free + 32 paid).
+This is a Vue.js web application for uploading images and downloading colors from a specific 64-color palette (32 free + 32 paid).
 
 ## Features
 - Upload images via file input

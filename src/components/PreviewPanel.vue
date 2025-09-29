@@ -68,6 +68,8 @@ defineEmits<{
   position: fixed;
   top: 80px;
   right: 24px;
+  bottom: auto; /* ensure not pinned to bottom */
+  left: auto;
   width: 320px;
   z-index: 60;
   background: #fff;
@@ -123,6 +125,6 @@ defineEmits<{
 .preview-header .preview-toggle { font-size: 18px; padding: 2px 6px }
 
 @media (max-width: 1000px) {
-  .preview { position: static; top: auto; right: auto; width: 100%; max-width: none }
+  .preview { position: fixed; top: 10px; right: 0; bottom: auto; left: auto; width: 150px; max-width: 150px }
 }
 </style>

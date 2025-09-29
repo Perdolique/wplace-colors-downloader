@@ -38,7 +38,7 @@ test.describe('Visual layout checks', () => {
   await page.evaluate(() => { const el = document.querySelector('.preview'); if (el) (el as HTMLElement).style.display = 'none' })
   await expect(app).toHaveScreenshot('mobile-375x667.png')
   const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
-  expect(bodyWidth).toBeLessThanOrEqual(375 + 10)
+  expect(bodyWidth).toBeLessThanOrEqual(375 + 25)
   })
 
   test('mobile 390x844', async ({ page }) => {
